@@ -2,7 +2,8 @@ class Router {
     constructor(routes = [], config = {}) {
         this.config = config
         this.routes = routes
-
+        this.container = document.querySelector('[data-router=view]')
+        
         location.replace('/#/')
         
         setTimeout(() => {
@@ -13,20 +14,42 @@ class Router {
     }
 
     init() {
-        const hash = new URL(location.href).hash
-        const [currentRoute] = this.routes.filter(route => route.path === hash.slice(1))
-       
+        const route = new URL(location.href).hash.slice(1)
+        const [currentRoute] = this.routes.filter(currentRoute => currentRoute.path === route)
+
         if (currentRoute) {
-            const component = currentRoute.component()
-        
-            component.mounted.call(component.methods)
+            this.callRoute(currentRoute)
         } else if (this.config['404']) {
-            this.config['404'].call(this, hash)
+            this.config['404'].call(this, route)
         }
     }
 
     redirect(path) {
         location.replace(`/#${path}`)
+    }
+
+    callRoute(currentRoute) {
+        if (this.config.before) {
+            this.config.before.call(this, currentRoute.path, () => {
+                this.callComponent(currentRoute.component())
+            })
+        } else {
+            this.callComponent(currentRoute.component())
+        }
+    }
+
+    callComponent(component) {
+        if (component.mounted) {
+            component.mounted.call(component.methods)
+        }
+
+        if (component.template) {
+            if (this.container) {
+                this.container.innerHTML = component.template()
+            } else {
+                throw new Error('router view container is not define [<div data-router="view"></div>]')
+            }
+        }
     }
 }
 
