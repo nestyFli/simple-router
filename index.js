@@ -7,7 +7,8 @@ class Router {
         location.replace('/#/')
         
         setTimeout(() => {
-            window.addEventListener('hashchange', this.init.bind(this))
+            window.addEventListener('hashchange', this.init.bind(this), false)
+            document.addEventListener('click', this.callLink.bind(this), false)
         }, 0)
 
         this.init()
@@ -26,6 +27,14 @@ class Router {
 
     redirect(path) {
         location.replace(`/#${path}`)
+    }
+
+    callLink(e) {
+        const path = e.target.dataset.routerLink
+
+        if (path) {
+            history.pushState({ path }, '', `/#${path}`)
+        }
     }
 
     callRoute(currentRoute) {
